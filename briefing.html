@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Briefings Fictícios — Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B3A26;
+    --ink-soft:#33452C;
+    --paper:#ECE8DF;
+    --paper-line:#c9c3b4;
+    --accent:#F2C230;
+    --accent-dim:#7a6318;
+    --accent-ink:#2B3A26;
+    --leaf:#8FD14F;
+    --cyan:#00AEEF;
+    --magenta:#EC008C;
+    --text-hi:#F4F1E8;
+    --text-lo:#9CAE8C;
+    --moss-text:#4a5a2f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--ink);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(242,194,48,.05) 0px, rgba(242,194,48,.05) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(90deg, rgba(242,194,48,.05) 0px, rgba(242,194,48,.05) 1px, transparent 1px, transparent 40px);
+    color:var(--text-hi);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+    padding:48px 20px 80px;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+  .wrap{width:100%; max-width:640px;}
+
+  .eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--text-lo); margin-bottom:14px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(34px, 7vw, 52px);
+    line-height:0.98;
+    letter-spacing:-0.01em;
+    margin:0 0 12px;
+  }
+  h1 span{color:var(--accent);}
+  .sub{
+    color:var(--text-lo);
+    font-size:13.5px;
+    line-height:1.6;
+    max-width:48ch;
+    margin-bottom:36px;
+  }
+
+  /* ticket */
+  .ticket{
+    position:relative;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    padding:34px 30px 26px;
+    overflow:hidden;
+  }
+  .crop{position:absolute; width:16px; height:16px; opacity:.5;}
+  .crop::before,.crop::after{content:"";position:absolute;background:var(--ink);}
+  .crop::before{width:100%;height:1px;top:50%;left:0;}
+  .crop::after{width:1px;height:100%;left:50%;top:0;}
+  .crop.tl{top:10px;left:10px;} .crop.tr{top:10px;right:10px;}
+  .crop.bl{bottom:10px;left:10px;} .crop.br{bottom:10px;right:10px;}
+
+  .reg{position:absolute; top:14px; right:34px; display:flex; gap:5px;}
+  .reg span{width:7px;height:7px;border-radius:50%;}
+  .reg .c{background:var(--cyan);} .reg .m{background:var(--magenta);} .reg .y{background:var(--accent);}
+
+  .field{padding:13px 2px; border-bottom:1px dashed var(--paper-line);}
+  .field:first-of-type{padding-top:0;}
+  .field:last-of-type{border-bottom:none; padding-bottom:0;}
+  .field-label{
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6b6558;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;
+  }
+  .field-value{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:18px; line-height:1.3;
+  }
+  .field-value.muted{color:#6b6558; font-weight:500; font-style:normal;}
+  .style-desc{font-size:12.5px; line-height:1.6; color:#4a473d; margin-top:7px;}
+  .font-suggestion{font-size:12.5px; line-height:1.6; color:#4a473d; margin-top:2px;}
+
+  .tag{
+    font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+    padding:3px 9px; border-radius:20px; flex-shrink:0;
+  }
+  .tag.defined{background:var(--ink); color:var(--accent);}
+  .tag.free{background:transparent; border:1px solid #a39c88; color:#6b6558;}
+
+  .swatches{display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;}
+  .swatch-item{display:flex; flex-direction:column; align-items:center; gap:5px;}
+  .swatch{width:34px; height:34px; border-radius:4px; border:1px solid rgba(0,0,0,.12);}
+  .swatch-hex{font-size:8.5px; color:#6b6558; letter-spacing:.02em;}
+
+  .scope-list{display:flex; flex-wrap:wrap; gap:7px;}
+  .scope-item{
+    font-size:11.5px; padding:5px 11px; border-radius:20px; font-weight:500;
+  }
+  .scope-item.base{background:var(--ink); color:var(--accent);}
+  .scope-item.optional{background:transparent; border:1px solid #a39c88; color:#6b6558;}
+  .scope-legend{font-size:9.5px; color:#8a8570; margin-top:8px; letter-spacing:.02em;}
+
+  .ticket-foot{
+    margin-top:16px; padding-top:14px; border-top:1px dashed var(--paper-line);
+    display:flex; justify-content:space-between; font-size:10px; letter-spacing:.08em;
+    color:#6b6558; text-transform:uppercase;
+  }
+  .ticket.landed{animation:stamp .28s ease-out;}
+  @keyframes stamp{
+    0%{transform:scale(1.03) rotate(-0.3deg); filter:brightness(1.1);}
+    100%{transform:scale(1) rotate(0deg); filter:brightness(1);}
+  }
+
+  .controls{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap;}
+  button{font-family:'IBM Plex Mono', monospace; cursor:pointer; border:none; letter-spacing:.06em;}
+  .btn-spin{
+    flex:1; min-width:180px; background:var(--accent); color:var(--accent-ink);
+    font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:.12em;
+    padding:17px 20px; border-radius:2px; transition:filter .15s, transform .1s;
+  }
+  .btn-spin:hover{filter:brightness(1.08);}
+  .btn-spin:active{transform:scale(.985);}
+  .btn-spin:disabled{background:var(--accent-dim); color:var(--text-lo); cursor:default;}
+
+  .filters{margin-top:28px;}
+  .filters-label{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-lo); margin-bottom:10px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    background:var(--ink-soft); border:1px solid #3a4732; color:var(--text-lo);
+    font-size:11.5px; padding:7px 12px; border-radius:20px; cursor:pointer;
+    transition:all .15s; user-select:none;
+  }
+  .chip.on{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+
+  .history{margin-top:44px;}
+  .hist-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .hist-label{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-lo); margin:0;}
+  .btn-clear{
+    background:transparent; border:none; color:var(--text-lo);
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:0;
+    transition:color .15s;
+  }
+  .btn-clear:hover{color:var(--accent);}
+  .hist-empty{color:#5c6b52; font-size:12.5px;}
+  .hist-item{
+    display:grid; grid-template-columns:28px 1fr auto; gap:12px; align-items:baseline;
+    padding:11px 0; border-bottom:1px solid #3a4732; font-size:12.5px;
+  }
+  .hist-item:first-child{border-top:1px solid #3a4732;}
+  .hist-num{color:var(--accent); font-weight:600;}
+  .hist-cat{color:var(--text-lo); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:2px;}
+  .hist-time{color:#5c6b52; font-size:10.5px;}
+
+  .nav-tabs{display:flex; gap:8px; margin-bottom:28px;}
+  .nav-tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    padding:8px 14px; border-radius:20px; text-decoration:none;
+    border:1px solid #3a4732; color:var(--text-lo);
+    transition:all .15s;
+  }
+  .nav-tab.active{background:var(--paper); color:var(--ink); border-color:var(--paper); font-weight:600;}
+  .nav-tab:hover:not(.active){border-color:var(--text-hi); color:var(--text-hi);}
+
+  .credit{
+    margin-top:56px;
+    text-align:center;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:lowercase;
+    color:var(--accent);
+  }
+  .credit span{font-weight:600;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="nav-tabs">
+    <a class="nav-tab" href="sorteio-design.html">Sorteio de Temas</a>
+    <a class="nav-tab active" href="briefing.html">Briefing Fictício</a>
+  </div>
+
+  <div class="eyebrow"><span class="dot"></span>GERADOR DE BRIEFINGS FICTÍCIOS — DESIGN</div>
+  <h1>SORTEIE.<br>BRIFE.<br><span>CRIE.</span></h1>
+  <p class="sub">Sorteie um cliente fictício. Segmento e estilo sempre vêm definidos — nome e paleta às vezes já vêm prontos, às vezes ficam por sua conta.</p>
+
+  <div class="ticket" id="ticket">
+    <div class="crop tl"></div><div class="crop tr"></div>
+    <div class="crop bl"></div><div class="crop br"></div>
+    <div class="reg"><span class="c"></span><span class="m"></span><span class="y"></span></div>
+
+    <div class="field">
+      <div class="field-label">MARCA <span class="tag free" id="nameTag">—</span></div>
+      <div class="field-value muted" id="nameValue">Clique em SORTEAR para gerar um briefing</div>
+      <div class="style-desc" id="personaValue"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">SEGMENTO</div>
+      <div class="field-value muted" id="segValue">—</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">ESTILO</div>
+      <div class="field-value muted" id="styleValue">—</div>
+      <div class="style-desc" id="styleDesc"></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">PALETA DE CORES <span class="tag free" id="paletteTag">—</span></div>
+      <div id="paletteBody"><div class="field-value muted">—</div></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">ILUSTRAÇÃO</div>
+      <div class="field-value muted" id="illusValue">—</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">ESCOPO DO PROJETO</div>
+      <div class="scope-list" id="scopeValue"></div>
+      <div class="scope-legend">preenchido = sempre incluso · contorno = opcional</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">PRAZO <span class="tag free" id="prazoTag">—</span></div>
+      <div class="field-value muted" id="prazoValue">—</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">TIPOGRAFIA SUGERIDA</div>
+      <div class="font-suggestion" id="fontValue">—</div>
+    </div>
+
+    <div class="ticket-foot">
+      <span id="ticketId">Nº ——</span>
+      <span>BRIEFING FICTÍCIO</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-spin" id="spinBtn">Sortear briefing</button>
+  </div>
+
+  <div class="filters">
+    <div class="filters-label">Filtrar estilos</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="history">
+    <div class="hist-head">
+      <div class="hist-label">Histórico da sessão</div>
+      <button class="btn-clear" id="clearBtn">Limpar histórico</button>
+    </div>
+    <div id="histList"><div class="hist-empty">Nenhum briefing sorteado ainda.</div></div>
+  </div>
+
+  <div class="credit">feito por <span>@omna.design</span></div>
+
+</div>
+
+<script>
+const STYLES = [
+  { name:"Minimalista", desc:"Redução ao essencial: poucos elementos, muito espaço em branco e hierarquia limpa. Cada peça precisa justificar sua presença na composição.", fonts:"Sem serifa geométrica, um único peso de destaque, bastante respiro entre linhas." },
+  { name:"Maximalista", desc:"Camadas, textura, cor e informação em abundância — estética de 'mais é mais', colagem e padronagens sobrepostas.", fonts:"Fontes display expressivas, misturando pesos e estilos diferentes na mesma peça." },
+  { name:"Brutalista", desc:"Estética crua e proposital: grades quebradas, tipografia enorme sem enfeite, referência ao design 'não polido'.", fonts:"Sem serifa grotesca ou monoespaçada, peso bold, sem refinamento decorativo." },
+  { name:"Escandinavo", desc:"Funcional e clean, tons neutros e naturais, formas orgânicas simples, foco total em usabilidade e luz.", fonts:"Sem serifa humanista, peso leve, bastante espaçamento entre caracteres." },
+  { name:"Bauhaus", desc:"Geometria pura — círculo, quadrado, triângulo — cores primárias e grid rígido guiado pelo funcionalismo.", fonts:"Sem serifa geométrica construída a partir de formas básicas (círculos e retas)." },
+  { name:"Art Déco", desc:"Simetria, luxo e linhas geométricas ornamentadas, com paleta de dourado e preto — inspiração anos 1920-30.", fonts:"Display geométrica ornamentada ou serifada elegante, geralmente em caixa alta." },
+  { name:"Swiss Style", desc:"Grid rigoroso, tipografia como elemento central da comunicação, objetividade e fotografia documental.", fonts:"Sem serifa neutra (estilo Helvetica/Akzidenz), hierarquia tipográfica muito clara." },
+  { name:"Retrô", desc:"Referência direta a décadas passadas, cores nostálgicas e formas/ícones de época bem marcados.", fonts:"Script retrô, slab serif ou display de época, com bastante personalidade." },
+  { name:"Vintage", desc:"Textura envelhecida, ornamentos clássicos e paleta desbotada, remetendo a rótulos e selos antigos.", fonts:"Serifada clássica, script manuscrita ou slab serif, com detalhes artesanais." },
+  { name:"Grunge", desc:"Textura suja, rasgos, manchas e colagem de estética punk/DIY, com contraste bem forte.", fonts:"Manuscrita bruta, display distorcida ou stencil, fugindo do traço limpo." },
+  { name:"Y2K", desc:"Estética do início dos anos 2000: elementos cromados e futuristas, gradientes, bolhas e otimismo cyber.", fonts:"Display bold e arredondada, itálica cromada, ares futuristas." },
+  { name:"Glassmorphism", desc:"Camadas translúcidas com efeito de vidro fosco, blur e sombras suaves criando profundidade sobre fundos vibrantes.", fonts:"Sem serifa moderna, leve e bem espaçada, para não competir com o efeito de vidro." },
+];
+
+const SEGMENTS = [
+  "marca de cookies artesanais","cafeteria de especialidade","estúdio de tatuagem",
+  "loja de discos de vinil","petshop de bairro","floricultura","cervejaria artesanal",
+  "oficina de bicicletas","papelaria criativa","livraria independente","estúdio de yoga",
+  "barbearia","sorveteria artesanal","loja de plantas","ateliê de cerâmica",
+  "hamburgueria gourmet","loja de skate","agência de turismo de aventura",
+  "brechó vintage","loja de velas aromáticas","confeitaria","estúdio de pilates",
+  "loja de jogos de tabuleiro","torrefação de café","ateliê de costura",
+  "loja de chocolates artesanais","escola de dança","escola de música",
+  "casa de chá","loja de produtos veganos","estúdio de design de joias",
+  "marca de óculos","marca de biquínis","loja de móveis","escola infantil",
+  "buffet para aniversários","loja de roupas","marca de maquiagem",
+  "marca de skincare","restaurante",
+];
+
+const SEGMENT_CATEGORY = {
+  "marca de cookies artesanais":"comida","cafeteria de especialidade":"comida",
+  "estúdio de tatuagem":"servicos","loja de discos de vinil":"cultura",
+  "petshop de bairro":"infantil_pet","floricultura":"casa",
+  "cervejaria artesanal":"comida","oficina de bicicletas":"servicos",
+  "papelaria criativa":"casa","livraria independente":"cultura",
+  "estúdio de yoga":"bemestar","barbearia":"bemestar",
+  "sorveteria artesanal":"comida","loja de plantas":"casa",
+  "ateliê de cerâmica":"servicos","hamburgueria gourmet":"comida",
+  "loja de skate":"cultura","agência de turismo de aventura":"cultura",
+  "brechó vintage":"moda_beleza","loja de velas aromáticas":"casa",
+  "confeitaria":"comida","estúdio de pilates":"bemestar",
+  "loja de jogos de tabuleiro":"cultura","torrefação de café":"comida",
+  "ateliê de costura":"servicos","loja de chocolates artesanais":"comida",
+  "escola de dança":"cultura","escola de música":"cultura",
+  "casa de chá":"comida","loja de produtos veganos":"comida",
+  "estúdio de design de joias":"servicos","marca de óculos":"moda_beleza",
+  "marca de biquínis":"moda_beleza","loja de móveis":"casa",
+  "escola infantil":"infantil_pet","buffet para aniversários":"infantil_pet",
+  "loja de roupas":"moda_beleza","marca de maquiagem":"moda_beleza",
+  "marca de skincare":"moda_beleza","restaurante":"comida",
+};
+
+const CATEGORY_WORDS = {
+  comida: ["Grão","Sabor","Colheita","Fermento","Aroma","Talher","Fornada","Especiaria","Safra","Fogão"],
+  moda_beleza: ["Véu","Espelho","Textura","Renda","Contorno","Seda","Reflexo","Traço","Brilho","Penteado"],
+  casa: ["Lar","Aconchego","Estante","Varanda","Quintal","Ninho","Alpendre","Argila","Telhado","Jardim"],
+  bemestar: ["Respiro","Equilíbrio","Raiz","Essência","Calma","Ritual","Centro","Fluxo","Pausa","Silêncio"],
+  infantil_pet: ["Recreio","Filhote","Manada","Trupe","Pipoca","Alegria","Ninho","Semente","Turma","Travessura"],
+  cultura: ["Palco","Vitrola","Capítulo","Cena","Compasso","Enredo","Sarau","Vitrine","Refrão","Roteiro"],
+  servicos: ["Ateliê","Oficina","Bureau","Bancada","Ofício","Craft","Estúdio","Prancheta","Tesoura","Traço"],
+};
+
+const PERSONAS = [
+  { label:"Brasileira", flavor:null },
+  { label:"Americana", flavor:["North","Union","Bright","Main","West","Common"] },
+  { label:"Espanhola", flavor:["Luna","Vega","Alba","Sierra","Duna","Costa"] },
+  { label:"Japonesa", flavor:["Sakura","Yume","Sora","Kumo","Haru","Tsuki"] },
+  { label:"Italiana", flavor:["Bella","Luce","Piazza","Dolce","Vento","Stella"] },
+  { label:"Escandinava", flavor:["Nord","Lys","Fjord","Skog","Sten","Vinter"] },
+  { label:"Francesa", flavor:["Belle","Lumière","Petit","Rue","Fleur","Clair"] },
+  { label:"Coreana", flavor:["Bom","Byeol","Haneul","Areum","Soon","Dari"] },
+];
+
+// segmentos que têm produto físico próprio (precisam de embalagem/rótulo)
+const SEGMENT_PRODUCT = {
+  "marca de cookies artesanais":true,"cafeteria de especialidade":true,
+  "estúdio de tatuagem":false,"loja de discos de vinil":false,
+  "petshop de bairro":false,"floricultura":true,
+  "cervejaria artesanal":true,"oficina de bicicletas":false,
+  "papelaria criativa":true,"livraria independente":false,
+  "estúdio de yoga":false,"barbearia":false,
+  "sorveteria artesanal":true,"loja de plantas":true,
+  "ateliê de cerâmica":true,"hamburgueria gourmet":true,
+  "loja de skate":false,"agência de turismo de aventura":false,
+  "brechó vintage":false,"loja de velas aromáticas":true,
+  "confeitaria":true,"estúdio de pilates":false,
+  "loja de jogos de tabuleiro":false,"torrefação de café":true,
+  "ateliê de costura":false,"loja de chocolates artesanais":true,
+  "escola de dança":false,"escola de música":false,
+  "casa de chá":true,"loja de produtos veganos":true,
+  "estúdio de design de joias":true,"marca de óculos":true,
+  "marca de biquínis":true,"loja de móveis":false,
+  "escola infantil":false,"buffet para aniversários":false,
+  "loja de roupas":true,"marca de maquiagem":true,
+  "marca de skincare":true,"restaurante":false,
+};
+
+const BASE_DELIVERABLE = "Identidade visual (logo + manual)";
+const PRODUCT_DELIVERABLE = "Embalagem";
+
+const OPTIONAL_COMMON = [
+  "Pôsteres para redes sociais","Site","Cartão de visita",
+  "Sinalização de loja","Uniforme","Mockup de fachada","E-commerce",
+];
+const OPTIONAL_PRODUCT_EXTRA = ["Rótulo","Catálogo de produtos"];
+const OPTIONAL_FOOD_EXTRA = ["Cardápio/menu"];
+
+function generateScope(segment){
+  const isProduct = SEGMENT_PRODUCT[segment];
+  const category = SEGMENT_CATEGORY[segment];
+  const base = [BASE_DELIVERABLE];
+  if (isProduct) base.push(PRODUCT_DELIVERABLE);
+
+  let pool = [...OPTIONAL_COMMON];
+  if (isProduct) pool = pool.concat(OPTIONAL_PRODUCT_EXTRA);
+  if (category === "comida") pool = pool.concat(OPTIONAL_FOOD_EXTRA);
+
+  const extraCount = Math.min(1 + Math.floor(Math.random() * 3), pool.length);
+  const extras = pickMany(pool, extraCount);
+  return { base, extras };
+}
+
+const PRAZOS = [5,7,10,14,18,21,25];
+
+const PALETTES = [
+  { label:"Terracota & Oliva", colors:["#C1652F","#6B7A4F","#E8DCC5","#2B2B28"] },
+  { label:"Ácido & Tinta", colors:["#D4F547","#14142B","#F2F0E6","#7A6FF0"] },
+  { label:"Coral & Marinho", colors:["#FF6F59","#1B3A4B","#F4E9DA","#2E86AB"] },
+  { label:"Mostarda & Tijolo", colors:["#E3B23C","#A63A26","#F6EFE3","#3B2E2A"] },
+  { label:"Menta & Ameixa", colors:["#9FD8B0","#4A2545","#F5F1E6","#D66BA0"] },
+  { label:"Preto & Neon", colors:["#0D0D0D","#FF2E63","#EAEAEA","#08D9D6"] },
+  { label:"Pastel Nublado", colors:["#F7C6C7","#C9D6E3","#F2EFE9","#7A8B99"] },
+  { label:"Dourado Clássico", colors:["#1A1A1A","#C9A227","#F4EDE0","#5C5C5C"] },
+  { label:"Verde Musgo & Creme", colors:["#3F4E33","#E8C230","#F2EDDE","#8A9B6E"] },
+];
+
+const ILLUSTRATION = [
+  "Sim — o cliente pede ilustração autoral na identidade.",
+  "Não — sem ilustração, foco em tipografia e fotografia.",
+  "Fica a seu critério — decida se entra ilustração ou não.",
+];
+
+const catsSet = STYLES.map(s => s.name);
+let activeStyles = new Set(catsSet);
+let history = [];
+let spinning = false;
+let ticketCount = 0;
+let usedStyles = new Set();
+let usedNames = new Set();
+
+function pickNoRepeat(pool, usedSet, keyFn){
+  let available = pool.filter(item => !usedSet.has(keyFn(item)));
+  if (!available.length) {
+    usedSet.clear();
+    available = pool.slice();
+  }
+  const choice = pick(available);
+  usedSet.add(keyFn(choice));
+  return choice;
+}
+
+function pickMany(arr, count){
+  const shuffled = arr.slice().sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+const chipsEl = document.getElementById('chips');
+catsSet.forEach(name => {
+  const chip = document.createElement('div');
+  chip.className = 'chip on';
+  chip.textContent = name;
+  chip.addEventListener('click', () => {
+    if (activeStyles.has(name)) {
+      if (activeStyles.size === 1) return;
+      activeStyles.delete(name);
+      chip.classList.remove('on');
+    } else {
+      activeStyles.add(name);
+      chip.classList.add('on');
+    }
+  });
+  chipsEl.appendChild(chip);
+});
+
+const spinBtn = document.getElementById('spinBtn');
+const ticket = document.getElementById('ticket');
+const nameValue = document.getElementById('nameValue');
+const nameTag = document.getElementById('nameTag');
+const personaValue = document.getElementById('personaValue');
+const segValue = document.getElementById('segValue');
+const styleValue = document.getElementById('styleValue');
+const styleDesc = document.getElementById('styleDesc');
+const paletteTag = document.getElementById('paletteTag');
+const paletteBody = document.getElementById('paletteBody');
+const illusValue = document.getElementById('illusValue');
+const scopeValue = document.getElementById('scopeValue');
+const prazoTag = document.getElementById('prazoTag');
+const prazoValue = document.getElementById('prazoValue');
+const fontValue = document.getElementById('fontValue');
+const ticketId = document.getElementById('ticketId');
+const histList = document.getElementById('histList');
+
+function pad(n){ return n.toString().padStart(2,'0'); }
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+function pool(){
+  return STYLES.filter(s => activeStyles.has(s.name));
+}
+
+function renderPaletteHTML(defined, palette){
+  if (!defined) {
+    return '<div class="field-value muted">Livre — escolha a paleta você mesma</div>';
+  }
+  return '<div class="field-value">' + palette.label + '</div><div class="swatches">' +
+    palette.colors.map(hex => `
+      <div class="swatch-item">
+        <div class="swatch" style="background:${hex}"></div>
+        <span class="swatch-hex">${hex}</span>
+      </div>`).join('') + '</div>';
+}
+
+// gera um nome coerente com o segmento (via categoria) e com a persona/nacionalidade sorteada
+function generateBrandName(segment, persona){
+  const category = SEGMENT_CATEGORY[segment] || "servicos";
+  const catWord = pick(CATEGORY_WORDS[category]);
+  if (!persona.flavor) return catWord;
+  return pick(persona.flavor) + " " + catWord;
+}
+
+spinBtn.addEventListener('click', () => {
+  if (spinning) return;
+  const items = pool();
+  if (!items.length) return;
+  spinning = true;
+  spinBtn.disabled = true;
+  ticket.classList.remove('landed');
+
+  let ticks = 0;
+  const totalTicks = 14;
+  let delay = 45;
+
+  function tick(){
+    const s = pick(items);
+    const seg = pick(SEGMENTS);
+    const persona = pick(PERSONAS);
+    styleValue.textContent = s.name;
+    segValue.textContent = seg;
+    nameValue.textContent = generateBrandName(seg, persona);
+    ticks++;
+    if (ticks < totalTicks) {
+      delay += 14;
+      setTimeout(tick, delay);
+    } else {
+      finalize(items);
+    }
+  }
+  tick();
+});
+
+function finalize(items){
+  const style = pickNoRepeat(items, usedStyles, s => s.name);
+  const segment = pick(SEGMENTS);
+  const persona = pick(PERSONAS);
+  const nameDefined = Math.random() < 0.6;
+  let brandName = null;
+  if (nameDefined) {
+    brandName = generateBrandName(segment, persona);
+    let attempts = 0;
+    while (usedNames.has(brandName) && attempts < 5) {
+      brandName = generateBrandName(segment, persona);
+      attempts++;
+    }
+    usedNames.add(brandName);
+  }
+  const paletteDefined = Math.random() < 0.55;
+  const palette = paletteDefined ? pick(PALETTES) : null;
+  const illustration = pick(ILLUSTRATION);
+  const scope = generateScope(segment);
+  const prazoDefined = Math.random() < 0.5;
+  const prazoDays = prazoDefined ? pick(PRAZOS) : null;
+
+  nameValue.textContent = nameDefined ? brandName : "Livre — crie o nome da marca";
+  nameValue.classList.toggle('muted', !nameDefined);
+  nameTag.textContent = nameDefined ? "DEFINIDO" : "LIVRE";
+  nameTag.className = "tag " + (nameDefined ? "defined" : "free");
+  personaValue.textContent = "Persona: marca " + persona.label.toLowerCase();
+
+  segValue.textContent = segment;
+  segValue.classList.remove('muted');
+
+  styleValue.textContent = style.name;
+  styleValue.classList.remove('muted');
+  styleDesc.textContent = style.desc;
+
+  paletteTag.textContent = paletteDefined ? "DEFINIDO" : "LIVRE";
+  paletteTag.className = "tag " + (paletteDefined ? "defined" : "free");
+  paletteBody.innerHTML = renderPaletteHTML(paletteDefined, palette);
+
+  illusValue.textContent = illustration;
+  illusValue.classList.remove('muted');
+
+  scopeValue.innerHTML =
+    scope.base.map(item => `<span class="scope-item base">${item}</span>`).join('') +
+    scope.extras.map(item => `<span class="scope-item optional">${item}</span>`).join('');
+
+  prazoTag.textContent = prazoDefined ? "DEFINIDO" : "LIVRE";
+  prazoTag.className = "tag " + (prazoDefined ? "defined" : "free");
+  prazoValue.textContent = prazoDefined ? prazoDays + " dias" : "Livre — escolha entre 5 e 25 dias";
+  prazoValue.classList.toggle('muted', !prazoDefined);
+
+  fontValue.textContent = style.fonts;
+
+  ticket.classList.add('landed');
+  ticketCount++;
+  ticketId.textContent = 'Nº ' + pad(ticketCount);
+
+  addHistory({
+    style: style.name,
+    segment,
+    name: nameDefined ? brandName : "nome livre",
+    persona: persona.label,
+  });
+
+  spinning = false;
+  spinBtn.disabled = false;
+}
+
+function addHistory(item){
+  const now = new Date();
+  const time = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  history.unshift({ ...item, time });
+  renderHistory();
+}
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  history = [];
+  usedStyles.clear();
+  usedNames.clear();
+  renderHistory();
+});
+
+function renderHistory(){
+  if (!history.length) {
+    histList.innerHTML = '<div class="hist-empty">Nenhum briefing sorteado ainda.</div>';
+    return;
+  }
+  histList.innerHTML = history.map((h, i) => `
+    <div class="hist-item">
+      <span class="hist-num">${pad(history.length - i)}</span>
+      <span><span class="hist-cat">${h.style}</span>${h.name} — ${h.segment}</span>
+      <span class="hist-time">${h.time}</span>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

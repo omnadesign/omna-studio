@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorteio de Estúdio — Design Gráfico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B3A26;
+    --ink-soft:#33452C;
+    --paper:#ECE8DF;
+    --paper-line:#c9c3b4;
+    --accent:#F2C230;
+    --accent-dim:#7a6318;
+    --accent-ink:#2B3A26;
+    --leaf:#8FD14F;
+    --cyan:#00AEEF;
+    --magenta:#EC008C;
+    --yellow:#F2C230;
+    --text-hi:#F4F1E8;
+    --text-lo:#9CAE8C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--ink);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(242,194,48,.05) 0px, rgba(242,194,48,.05) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(90deg, rgba(242,194,48,.05) 0px, rgba(242,194,48,.05) 1px, transparent 1px, transparent 40px);
+    color:var(--text-hi);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+    padding:48px 20px 80px;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+  .wrap{width:100%; max-width:640px;}
+
+  /* header */
+  .eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--text-lo); margin-bottom:14px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(34px, 7vw, 52px);
+    line-height:0.98;
+    letter-spacing:-0.01em;
+    margin:0 0 12px;
+  }
+  h1 span{color:var(--accent);}
+  .sub{
+    color:var(--text-lo);
+    font-size:13.5px;
+    line-height:1.6;
+    max-width:46ch;
+    margin-bottom:40px;
+  }
+
+  /* ticket card */
+  .ticket{
+    position:relative;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    padding:34px 30px 28px;
+    min-height:190px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .crop{position:absolute; width:16px; height:16px; opacity:.55;}
+  .crop::before,.crop::after{content:"";position:absolute;background:var(--ink);}
+  .crop::before{width:100%;height:1px;top:50%;left:0;}
+  .crop::after{width:1px;height:100%;left:50%;top:0;}
+  .crop.tl{top:10px;left:10px;} .crop.tr{top:10px;right:10px;}
+  .crop.bl{bottom:10px;left:10px;} .crop.br{bottom:10px;right:10px;}
+
+  .reg{position:absolute; top:14px; right:34px; display:flex; gap:5px;}
+  .reg span{width:7px;height:7px;border-radius:50%;}
+  .reg .c{background:var(--cyan);} .reg .m{background:var(--magenta);} .reg .y{background:var(--yellow);}
+
+  .cat-label{
+    font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:10px;
+  }
+  .topic{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:clamp(22px, 4.6vw, 30px);
+    line-height:1.15;
+    letter-spacing:-0.01em;
+  }
+  .topic.placeholder{color:var(--paper-line); font-weight:500; font-style:normal;}
+  .ticket-foot{
+    margin-top:16px; padding-top:14px; border-top:1px dashed var(--paper-line);
+    display:flex; justify-content:space-between; font-size:10px; letter-spacing:.08em;
+    color:#6b6558; text-transform:uppercase;
+  }
+  .ticket.landed{animation:stamp .28s ease-out;}
+  @keyframes stamp{
+    0%{transform:scale(1.04) rotate(-0.4deg); filter:brightness(1.15);}
+    100%{transform:scale(1) rotate(0deg); filter:brightness(1);}
+  }
+
+  /* controls */
+  .controls{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap;}
+  button{
+    font-family:'IBM Plex Mono', monospace;
+    cursor:pointer;
+    border:none;
+    letter-spacing:.06em;
+  }
+  .btn-spin{
+    flex:1;
+    min-width:180px;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-weight:700;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    padding:17px 20px;
+    border-radius:2px;
+    transition:filter .15s, transform .1s;
+  }
+  .btn-spin:hover{filter:brightness(1.08);}
+  .btn-spin:active{transform:scale(.985);}
+  .btn-spin:disabled{background:var(--accent-dim); color:var(--text-lo); cursor:default;}
+
+  /* category filter */
+  .filters{
+    margin-top:28px;
+  }
+  .filters-label{
+    font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-lo); margin-bottom:10px;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    background:var(--ink-soft);
+    border:1px solid #3a3730;
+    color:var(--text-lo);
+    font-size:11.5px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:all .15s;
+    user-select:none;
+  }
+  .chip.on{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+  .pool-count{margin-top:12px; font-size:11px; color:#5c584d; letter-spacing:.04em;}
+
+  .credit{
+    margin-top:56px;
+    text-align:center;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:lowercase;
+    color:var(--yellow);
+  }
+  .credit span{font-weight:600;}
+
+  .nav-tabs{display:flex; gap:8px; margin-bottom:28px;}
+  .nav-tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    padding:8px 14px; border-radius:20px; text-decoration:none;
+    border:1px solid #3a3730; color:var(--text-lo);
+    transition:all .15s;
+  }
+  .nav-tab.active{background:var(--paper); color:var(--ink); border-color:var(--paper); font-weight:600;}
+  .nav-tab:hover:not(.active){border-color:var(--text-hi); color:var(--text-hi);}
+
+  /* timer */
+  .timer-block{
+    margin-top:40px;
+    display:flex; align-items:center; gap:22px;
+    background:var(--ink-soft);
+    border:1px solid #302d27;
+    border-radius:2px;
+    padding:20px 22px;
+  }
+  .ring-wrap{position:relative; width:76px; height:76px; flex-shrink:0;}
+  svg.ring{transform:rotate(-90deg);}
+  .ring-bg{fill:none; stroke:#302d27; stroke-width:5;}
+  .ring-fg{fill:none; stroke:var(--accent); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset .3s linear;}
+  .ring-time{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:16px;
+  }
+  .timer-info{flex:1;}
+  .timer-label{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-lo); margin-bottom:8px;}
+  .timer-buttons{display:flex; gap:8px;}
+  .btn-sm{
+    background:transparent; border:1px solid #4a463c; color:var(--text-hi);
+    font-size:11px; padding:8px 14px; border-radius:2px; text-transform:uppercase; letter-spacing:.06em;
+    transition:all .15s;
+  }
+  .btn-sm:hover{border-color:var(--text-hi);}
+  .btn-sm.primary{background:var(--paper); color:var(--ink); border-color:var(--paper);}
+  .timer-block.done .ring-fg{stroke:var(--leaf);}
+  .timer-block.done{animation:flash 1s ease-in-out 2;}
+  @keyframes flash{0%,100%{border-color:#302d27;} 50%{border-color:var(--leaf);}}
+
+  /* history */
+  .history{margin-top:44px;}
+  .hist-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .hist-label{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-lo); margin:0;}
+  .btn-clear{
+    background:transparent; border:none; color:var(--text-lo);
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:0;
+    transition:color .15s;
+  }
+  .btn-clear:hover{color:var(--accent);}
+  .hist-empty{color:#5c584d; font-size:12.5px;}
+  .hist-item{
+    display:grid; grid-template-columns:28px 1fr auto; gap:12px; align-items:baseline;
+    padding:11px 0; border-bottom:1px solid #262319; font-size:12.5px;
+  }
+  .hist-item:first-child{border-top:1px solid #262319;}
+  .hist-num{color:var(--accent); font-weight:600;}
+  .hist-cat{color:var(--text-lo); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:2px;}
+  .hist-time{color:#5c584d; font-size:10.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="nav-tabs">
+    <a class="nav-tab active" href="sorteio-design.html">Sorteio de Temas</a>
+    <a class="nav-tab" href="briefing.html">Briefing Fictício</a>
+  </div>
+
+  <h1>GIRE.<br>ESTUDE.<br><span>EXPLIQUE.</span></h1>
+  <p class="sub">Sorteie um tema de design. Estude por conta própria. Depois inicie o cronômetro e explique o que aprendeu em 1 minuto.</p>
+
+  <div class="ticket" id="ticket">
+    <div class="crop tl"></div><div class="crop tr"></div>
+    <div class="crop bl"></div><div class="crop br"></div>
+    <div class="reg"><span class="c"></span><span class="m"></span><span class="y"></span></div>
+    <div class="cat-label" id="catLabel">AGUARDANDO SORTEIO</div>
+    <div class="topic placeholder" id="topicLabel">Clique em GIRAR para sortear um tema</div>
+    <div class="ticket-foot">
+      <span id="ticketId">Nº ——</span>
+      <span>PROVA DE ESTUDO</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-spin" id="spinBtn">Girar</button>
+  </div>
+
+  <div class="filters">
+    <div class="filters-label">Filtrar categorias</div>
+    <div class="chips" id="chips"></div>
+    <div class="pool-count" id="poolCount"></div>
+  </div>
+
+  <div class="timer-block" id="timerBlock">
+    <div class="ring-wrap">
+      <svg class="ring" width="76" height="76" viewBox="0 0 76 76">
+        <circle class="ring-bg" cx="38" cy="38" r="33"></circle>
+        <circle class="ring-fg" id="ringFg" cx="38" cy="38" r="33" stroke-dasharray="207.3" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="ring-time" id="ringTime">1:00</div>
+    </div>
+    <div class="timer-info">
+      <div class="timer-label">Cronômetro de explicação — 60s</div>
+      <div class="timer-buttons">
+        <button class="btn-sm primary" id="startBtn">Iniciar</button>
+        <button class="btn-sm" id="pauseBtn">Pausar</button>
+        <button class="btn-sm" id="resetBtn">Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="history">
+    <div class="hist-head">
+      <div class="hist-label">Histórico da sessão</div>
+      <button class="btn-clear" id="clearBtn">Limpar histórico</button>
+    </div>
+    <div id="histList"><div class="hist-empty">Nenhum tema sorteado ainda.</div></div>
+  </div>
+
+  <div class="credit">feito por <span>@omna.design</span></div>
+
+</div>
+
+<script>
+const TOPICS = [
+  // ---- Tipografia ----
+  ["Tipografia","Hierarquia tipográfica"],["Tipografia","Anatomia da letra: haste, serifa, contraforma"],
+  ["Tipografia","Kerning, tracking e leading"],["Tipografia","Classificação de fontes: serifada, sem serifa, display"],
+  ["Tipografia","Emparelhamento de fontes (font pairing)"],["Tipografia","Fontes variáveis (variable fonts)"],
+  ["Tipografia","Tipografia responsiva e escalas fluidas"],["Tipografia","Grid tipográfico e linha de base"],
+  ["Tipografia","Tipografia editorial em revistas"],["Tipografia","Lettering vs tipografia"],
+  ["Tipografia","Caligrafia e sua influência na tipografia"],["Tipografia","Fontes monoespaçadas e uso em dados/código"],
+  ["Tipografia","Superfamílias tipográficas"],["Tipografia","Ligaduras e caracteres especiais"],
+  ["Tipografia","Numerais tabulares vs proporcionais"],["Tipografia","Optical sizing (tamanhos ópticos)"],
+  ["Tipografia","Tipografia em telas vs impresso"],["Tipografia","Hinting e renderização de fontes"],
+  ["Tipografia","Tipografia gótica (blackletter)"],["Tipografia","Fontes slab serif"],
+  ["Tipografia","Fontes humanistas sem serifa"],["Tipografia","Fontes geométricas sem serifa"],
+  ["Tipografia","Tipografia kinética (motion type)"],["Tipografia","Tipografia em identidade de marca"],
+  ["Tipografia","Tipografia econômica (tinta e espaço)"],["Tipografia","Contraste de traço (thick/thin)"],
+  ["Tipografia","Itálico verdadeiro vs oblíquo"],["Tipografia","Tipografia acessível (dislexia, baixa visão)"],
+  ["Tipografia","Espaçamento entre parágrafos e alinhamento"],["Tipografia","Justificação de texto e hifenização"],
+  ["Tipografia","Tipografia em wayfinding e sinalização"],["Tipografia","Escala modular tipográfica"],
+  ["Tipografia","Fontes históricas revividas (revivals)"],["Tipografia","Tipos condensados e expandidos"],
+  ["Tipografia","Tipografia experimental e desconstrução"],["Tipografia","Tipografia em capas de livro"],
+  ["Tipografia","Grid de letras em logotipos"],["Tipografia","Rios e buracos no texto justificado"],
+  ["Tipografia","Fontes de exibição (display type)"],["Tipografia","Tipografia multilíngue e diacríticos"],
+  ["Tipografia","Direção de texto (RTL, vertical)"],["Tipografia","Fontes web e performance de carregamento"],
+  ["Tipografia","Type foundries e licenciamento de fontes"],["Tipografia","Tipografia em embalagens"],
+  ["Tipografia","Microtipografia: aspas, travessões, reticências"],["Tipografia","Tipografia brutalista"],
+  ["Tipografia","Sistemas de tipos para design systems"],["Tipografia","Peso e ênfase tipográfica"],
+  ["Tipografia","Tamanhos mínimos de leitura em UI"],["Tipografia","Tendências tipográficas atuais"],
+  ["Tipografia","Tipografia vernacular (letreiros de rua)"],["Tipografia","Fontes serifadas modernas vs old style"],
+
+  // ---- Teoria da Cor ----
+  ["Teoria da Cor","Círculo cromático e harmonias de cor"],["Teoria da Cor","Contraste e legibilidade"],
+  ["Teoria da Cor","Psicologia da cor na marca"],["Teoria da Cor","CMYK vs RGB na prática"],
+  ["Teoria da Cor","Paletas acessíveis (WCAG)"],["Teoria da Cor","Cores complementares"],
+  ["Teoria da Cor","Cores análogas"],["Teoria da Cor","Tríade de cores"],
+  ["Teoria da Cor","Matiz, saturação e luminosidade (HSL)"],["Teoria da Cor","Temperatura de cor: quente vs fria"],
+  ["Teoria da Cor","Cor local vs cor luz"],["Teoria da Cor","Sistemas Pantone e cores especiais"],
+  ["Teoria da Cor","Gestão de cor e perfis ICC"],["Teoria da Cor","Simbolismo cultural das cores"],
+  ["Teoria da Cor","Cor e hierarquia visual"],["Teoria da Cor","Paletas monocromáticas"],
+  ["Teoria da Cor","Cor e contraste em dark mode"],["Teoria da Cor","Daltonismo e design inclusivo de cor"],
+  ["Teoria da Cor","Cor em fotografia editorial"],["Teoria da Cor","Correção de cor vs color grading"],
+  ["Teoria da Cor","Gamut de cor (sRGB, Adobe RGB)"],["Teoria da Cor","Cor em identidade de marca multissetorial"],
+  ["Teoria da Cor","Cor em embalagens e prateleira"],["Teoria da Cor","Contraste simultâneo e percepção de cor"],
+  ["Teoria da Cor","Paletas neutras e tons terrosos"],["Teoria da Cor","Cor em sinalização e segurança"],
+  ["Teoria da Cor","Gradientes e transições de cor"],["Teoria da Cor","Cor em ilustração vetorial"],
+  ["Teoria da Cor","Paletas sazonais e tendências de cor"],["Teoria da Cor","Cor em estados de interface (sucesso, erro, alerta)"],
+  ["Teoria da Cor","Tipografia colorida"],["Teoria da Cor","Overprint e sobreposição de tintas"],
+  ["Teoria da Cor","Cores metálicas e especiais em impressão"],["Teoria da Cor","Cor e emoção no storytelling visual"],
+  ["Teoria da Cor","Cor em fotografia de produto"],["Teoria da Cor","Teste A/B de paletas de cor"],
+  ["Teoria da Cor","Cor em wayfinding"],["Teoria da Cor","Sistemas de cor para design systems"],
+  ["Teoria da Cor","Cor em pixel art e jogos"],["Teoria da Cor","Cor em arquitetura de informação"],
+  ["Teoria da Cor","Contraste tonal em preto e branco"],["Teoria da Cor","Cor e absorção em diferentes papéis"],
+  ["Teoria da Cor","Cor em telas OLED vs LCD"],["Teoria da Cor","Rebranding e mudança de paleta"],
+  ["Teoria da Cor","Cor em ícones e pictogramas"],["Teoria da Cor","Harmonia de cor em still life"],
+  ["Teoria da Cor","Cor em identidade de eventos"],["Teoria da Cor","Teoria da cor de Itten e a Bauhaus"],
+  ["Teoria da Cor","Cor em ilustração editorial"],["Teoria da Cor","Pantone Color of the Year e tendências"],
+
+  // ---- Composição & Layout ----
+  ["Composição & Layout","Grid systems e retículas"],["Composição & Layout","Regra dos terços e ponto focal"],
+  ["Composição & Layout","Hierarquia visual"],["Composição & Layout","Espaço negativo"],
+  ["Composição & Layout","Alinhamento e proporção áurea"],["Composição & Layout","Grid modular"],
+  ["Composição & Layout","Grid de coluna única vs múltiplas colunas"],["Composição & Layout","Simetria e assimetria"],
+  ["Composição & Layout","Ritmo visual e repetição"],["Composição & Layout","Equilíbrio visual (peso visual)"],
+  ["Composição & Layout","Enquadramento e recorte"],["Composição & Layout","Grid de 12 colunas (web)"],
+  ["Composição & Layout","Margens e sangrias em layout impresso"],["Composição & Layout","Fluxo de leitura: padrão Z e F"],
+  ["Composição & Layout","Composição em spread de revista"],["Composição & Layout","Layout responsivo e breakpoints"],
+  ["Composição & Layout","Vertical rhythm e grid tipográfico"],["Composição & Layout","Sobreposição e camadas"],
+  ["Composição & Layout","Composição em cartazes"],["Composição & Layout","White space como elemento ativo"],
+  ["Composição & Layout","Grid isométrico"],["Composição & Layout","Diagramação de manuais técnicos"],
+  ["Composição & Layout","Composição em capas de livro e revista"],["Composição & Layout","Densidade de informação em layout"],
+  ["Composição & Layout","Grid flexível (conceito de flexbox/CSS grid)"],["Composição & Layout","Composição fotográfica aplicada ao layout"],
+  ["Composição & Layout","Hierarquia por tamanho e peso"],["Composição & Layout","Composição em infográficos"],
+  ["Composição & Layout","Alinhamento óptico vs matemático"],["Composição & Layout","Layout modular para design systems"],
+  ["Composição & Layout","Grid de baseline em publicações"],["Composição & Layout","Composição em outdoor e mídia externa"],
+  ["Composição & Layout","Proporções de página: A4, Letter, formatos customizados"],["Composição & Layout","Composição centrada vs assimétrica"],
+  ["Composição & Layout","Layout de e-mail marketing"],["Composição & Layout","Composição em apresentações de slides"],
+  ["Composição & Layout","Grid de embalagem e dieline"],["Composição & Layout","Linhas-guia e marcas de registro"],
+  ["Composição & Layout","Composição em identidade visual aplicada"],["Composição & Layout","Diagramação de tabelas e dados"],
+  ["Composição & Layout","Layout de dashboard"],["Composição & Layout","Composição em ilustração de capa"],
+  ["Composição & Layout","Grid responsivo para apps mobile"],["Composição & Layout","Espaçamento consistente (spacing tokens)"],
+  ["Composição & Layout","Composição dinâmica vs estática"],["Composição & Layout","Layout editorial minimalista"],
+  ["Composição & Layout","Composição em fotografia de still life"],["Composição & Layout","Grid de exposição (design de ambientes)"],
+  ["Composição & Layout","Composição em storytelling visual sequencial"],["Composição & Layout","Brutalismo web e maximalismo em layout"],
+
+  // ---- Identidade Visual & Branding ----
+  ["Identidade Visual","Construção de um manual de marca"],["Identidade Visual","Naming e territórios de marca"],
+  ["Identidade Visual","Sistemas de logotipo (versões e aplicações)"],["Identidade Visual","Tom de voz visual"],
+  ["Identidade Visual","Brand guidelines digitais vs impressos"],["Identidade Visual","Arquitetura de marca: masterbrand e submarcas"],
+  ["Identidade Visual","Rebranding: quando e por quê"],["Identidade Visual","Identidade verbal x identidade visual"],
+  ["Identidade Visual","Mascotes e personagens de marca"],["Identidade Visual","Aplicações de marca em papelaria"],
+  ["Identidade Visual","Marca em ambientes físicos"],["Identidade Visual","Sound branding e sua relação visual"],
+  ["Identidade Visual","Consistência de marca multicanal"],["Identidade Visual","Brand book vs style guide"],
+  ["Identidade Visual","Símbolo vs logotipo vs marca mista"],["Identidade Visual","Grid de construção de logotipo"],
+  ["Identidade Visual","Área de proteção do logotipo"],["Identidade Visual","Versões monocromáticas do logotipo"],
+  ["Identidade Visual","Identidade visual para eventos"],["Identidade Visual","Identidade visual para franquias"],
+  ["Identidade Visual","Co-branding e parcerias de marca"],["Identidade Visual","Employer branding visual"],
+  ["Identidade Visual","Identidade visual em embalagens"],["Identidade Visual","Marca e sustentabilidade visual"],
+  ["Identidade Visual","Identidade visual para redes sociais"],["Identidade Visual","Tipos de naming: descritivo, fantasia, abstrato"],
+  ["Identidade Visual","Pesquisa de marca e benchmarking visual"],["Identidade Visual","Personas de marca e moodboards"],
+  ["Identidade Visual","Identidade visual para apps e produtos digitais"],["Identidade Visual","Marca em uniformes e frota"],
+  ["Identidade Visual","Marca em sinalização de loja"],["Identidade Visual","Evolução histórica de logotipos icônicos"],
+  ["Identidade Visual","Identidade visual regional vs global"],["Identidade Visual","Testes de aplicação: favicon, redes sociais"],
+  ["Identidade Visual","Identidade visual para ONGs e causas"],["Identidade Visual","Marca e storytelling de origem"],
+  ["Identidade Visual","Identidade visual para produtos de luxo"],["Identidade Visual","Identidade visual para startups e tech"],
+  ["Identidade Visual","Marca em relatórios anuais"],["Identidade Visual","Sistemas de padrões gráficos de marca"],
+  ["Identidade Visual","Identidade visual para bebidas e alimentos"],["Identidade Visual","Naming jurídico vs naming criativo"],
+  ["Identidade Visual","Marca e registro de propriedade intelectual"],["Identidade Visual","Marca em campanhas sazonais"],
+  ["Identidade Visual","Identidade visual adaptativa (logo dinâmico)"],["Identidade Visual","Guias de tom para redação de marca"],
+  ["Identidade Visual","Marca em merchandising"],["Identidade Visual","Auditoria de marca (brand audit)"],
+  ["Identidade Visual","Identidade visual para setor automotivo"],["Identidade Visual","Cases marcantes de rebranding"],
+
+  // ---- Produção Gráfica & Pré-impressão ----
+  ["Produção Gráfica","Sangria, margem de segurança e vinco"],["Produção Gráfica","Perfis de cor e gestão de cor (ICC)"],
+  ["Produção Gráfica","Pré-impressão: o que revisar antes de fechar arquivo"],["Produção Gráfica","Tipos de acabamento: laminação, verniz, hot stamping"],
+  ["Produção Gráfica","Empacotamento de arquivo para gráfica"],["Produção Gráfica","Tipos de papel e gramatura"],
+  ["Produção Gráfica","Impressão offset vs digital"],["Produção Gráfica","Serigrafia e suas aplicações"],
+  ["Produção Gráfica","Impressão flexográfica"],["Produção Gráfica","Cores especiais (Pantone) vs quadricromia"],
+  ["Produção Gráfica","Overprint e knockout"],["Produção Gráfica","Resolução de imagem para impressão (DPI)"],
+  ["Produção Gráfica","Conversão de RGB para CMYK"],["Produção Gráfica","Prova de cor e prova digital"],
+  ["Produção Gráfica","Vinco e dobra em materiais impressos"],["Produção Gráfica","Corte especial (faca) e formatos customizados"],
+  ["Produção Gráfica","Verniz UV localizado"],["Produção Gráfica","Hot stamping e relevo seco"],
+  ["Produção Gráfica","Encadernação: lombada quadrada, wire-o, grampo"],["Produção Gráfica","Impressão em tecido e materiais alternativos"],
+  ["Produção Gráfica","Marcas de corte e registro"],["Produção Gráfica","Trapping (armadilha de cor)"],
+  ["Produção Gráfica","Espaço de cor para fotolito"],["Produção Gráfica","Impressão de grandes formatos"],
+  ["Produção Gráfica","PDF/X e padrões de arquivo para gráfica"],["Produção Gráfica","Revisão de prova impressa (bater prova)"],
+  ["Produção Gráfica","Impressão sustentável: papel reciclado, tintas vegetais"],["Produção Gráfica","Numeração e código de barras em produção"],
+  ["Produção Gráfica","Braille em embalagens (acessibilidade)"],["Produção Gráfica","Impressão 3D aplicada a protótipos"],
+  ["Produção Gráfica","Serigrafia em camisetas e brindes"],["Produção Gráfica","Controle de qualidade em produção gráfica"],
+  ["Produção Gráfica","Impressão digital de pequenos formatos"],["Produção Gráfica","Papel offset vs papel couché"],
+  ["Produção Gráfica","Gramatura e opacidade do papel"],["Produção Gráfica","Acabamento fosco vs brilho"],
+  ["Produção Gráfica","Encartes e formatos dobráveis (sanfona, gate-fold)"],["Produção Gráfica","Etiquetas adesivas: tipos e aplicações"],
+  ["Produção Gráfica","Impressão de manuais técnicos multilíngues"],["Produção Gráfica","Controle de cor entre tela e impressão"],
+  ["Produção Gráfica","Materiais promocionais (POP, displays)"],["Produção Gráfica","Impressão em relevo: embossing e debossing"],
+  ["Produção Gráfica","Impressão de livros: miolo e capa"],["Produção Gráfica","Testes de resistência de embalagem impressa"],
+  ["Produção Gráfica","Diagramação para impressão em duplex"],["Produção Gráfica","Cores Pantone metálicas e fluorescentes"],
+  ["Produção Gráfica","Softproof vs hardproof"],["Produção Gráfica","Fluxo de preflight de arquivo final"],
+  ["Produção Gráfica","Impressão sob demanda (print on demand)"],["Produção Gráfica","Tendências em acabamentos gráficos"],
+
+  // ---- UI/UX & Design Digital ----
+  ["UI/UX","Diferença entre UI e UX"],["UI/UX","Design system e tokens"],
+  ["UI/UX","Affordance e feedback visual"],["UI/UX","Acessibilidade em interfaces"],
+  ["UI/UX","Wireframes vs protótipos de alta fidelidade"],["UI/UX","Fluxos de usuário (user flows)"],
+  ["UI/UX","Testes de usabilidade"],["UI/UX","Microinterações"],
+  ["UI/UX","Design responsivo vs adaptativo"],["UI/UX","Design de formulários"],
+  ["UI/UX","Estados de componentes: hover, active, disabled"],["UI/UX","Design de onboarding"],
+  ["UI/UX","Arquitetura da informação"],["UI/UX","Heurísticas de Nielsen"],
+  ["UI/UX","Design mobile-first"],["UI/UX","Dark mode e temas de interface"],
+  ["UI/UX","Design de navegação: menus, breadcrumbs"],["UI/UX","Design de dashboards e visualização de dados"],
+  ["UI/UX","Prototipagem interativa"],["UI/UX","Design centrado no usuário (UCD)"],
+  ["UI/UX","Personas e jornadas de usuário"],["UI/UX","Design de e-commerce e conversão"],
+  ["UI/UX","Design de notificações e feedback do sistema"],["UI/UX","Componentização e bibliotecas de componentes"],
+  ["UI/UX","Grid systems para interfaces digitais"],["UI/UX","Design de ícones para interface"],
+  ["UI/UX","Motion design em interfaces"],["UI/UX","Acessibilidade de cor e contraste em UI"],
+  ["UI/UX","Design para leitores de tela"],["UI/UX","Testes A/B em interfaces"],
+  ["UI/UX","Apps vs sites responsivos"],["UI/UX","Design de empty states"],
+  ["UI/UX","Design de erro e mensagens de sistema"],["UI/UX","UX writing e microcopy"],
+  ["UI/UX","Design de checkout e fluxos de pagamento"],["UI/UX","Design de landing pages"],
+  ["UI/UX","Design de e-mail responsivo"],["UI/UX","Design de interface para wearables"],
+  ["UI/UX","Interfaces espaciais e realidade aumentada"],["UI/UX","Design de voz (VUI)"],
+  ["UI/UX","Design de painéis administrativos"],["UI/UX","Consistência visual entre iOS, Android e Web"],
+  ["UI/UX","Loading states e skeleton screens"],["UI/UX","Design orientado a dados"],
+  ["UI/UX","Gamificação em interfaces"],["UI/UX","Design ético e dark patterns"],
+  ["UI/UX","Design para baixa conectividade"],["UI/UX","Design de configurações e preferências"],
+  ["UI/UX","Handoff entre design e desenvolvimento"],["UI/UX","Neumorfismo e glassmorphism"],
+
+  // ---- Ilustração & Ícones ----
+  ["Ilustração & Ícones","Estilos de ilustração: flat, isométrica, line art"],["Ilustração & Ícones","Grid de construção de ícones"],
+  ["Ilustração & Ícones","Consistência de traço e peso visual"],["Ilustração & Ícones","Ilustração vetorial vs raster"],
+  ["Ilustração & Ícones","Ilustração editorial para reportagens"],["Ilustração & Ícones","Personagens e expressões em ilustração"],
+  ["Ilustração & Ícones","Ilustração científica e técnica"],["Ilustração & Ícones","Pictogramas e sinalização visual"],
+  ["Ilustração & Ícones","Ilustração infantil"],["Ilustração & Ícones","Ilustração de padrões (patterns) decorativos"],
+  ["Ilustração & Ícones","Ilustração botânica"],["Ilustração & Ícones","Ícones outline vs preenchidos"],
+  ["Ilustração & Ícones","Sistemas de ícones para design systems"],["Ilustração & Ícones","Ilustração 3D e render"],
+  ["Ilustração & Ícones","Ilustração isométrica para produtos digitais"],["Ilustração & Ícones","Ilustração de capas de livro"],
+  ["Ilustração & Ícones","Ilustração publicitária"],["Ilustração & Ícones","Ilustração de mapas e infográficos"],
+  ["Ilustração & Ícones","Estilo de linha única (single line art)"],["Ilustração & Ícones","Ilustração para embalagens de produto"],
+  ["Ilustração & Ícones","Ilustração digital vs tradicional"],["Ilustração & Ícones","Grid e proporção em mascotes"],
+  ["Ilustração & Ícones","Ilustração vetorial para animação"],["Ilustração & Ícones","Ícones animados (microanimação)"],
+  ["Ilustração & Ícones","Ilustração de gestos e mãos"],["Ilustração & Ícones","Ilustração de texturas e materiais"],
+  ["Ilustração & Ícones","Ilustração arquitetônica"],["Ilustração & Ícones","Estilo retrô e vintage na ilustração"],
+  ["Ilustração & Ícones","Ilustração minimalista"],["Ilustração & Ícones","Ilustração maximalista e detalhista"],
+  ["Ilustração & Ícones","Ilustração para redes sociais"],["Ilustração & Ícones","Ilustração de storyboard"],
+  ["Ilustração & Ícones","Sistema de ícones para manuais técnicos"],["Ilustração & Ícones","Ilustração de moda (fashion illustration)"],
+  ["Ilustração & Ícones","Ilustração gastronômica"],["Ilustração & Ícones","Ilustração conceitual"],
+  ["Ilustração & Ícones","Ilustração de personagens para jogos"],["Ilustração & Ícones","Sombra e luz em ilustração vetorial"],
+  ["Ilustração & Ícones","Ilustração de diagramas explicativos"],["Ilustração & Ícones","Ilustração generativa e algorítmica"],
+  ["Ilustração & Ícones","Grid de 24px/48px para ícones digitais"],["Ilustração & Ícones","Ilustração para sinalização de segurança"],
+  ["Ilustração & Ícones","Risografia aplicada à ilustração"],["Ilustração & Ícones","Ilustração de capa de álbum"],
+  ["Ilustração & Ícones","Estética de tatuagem aplicada ao design"],["Ilustração & Ícones","Simplificação de formas complexas em ícones"],
+  ["Ilustração & Ícones","Ilustração aplicada a apresentações"],["Ilustração & Ícones","Ilustração para identidade de marca"],
+  ["Ilustração & Ícones","Paletas de cor em ilustração vetorial"],["Ilustração & Ícones","Tendências em ilustração digital"],
+
+  // ---- Direção de Arte & Fotografia ----
+  ["Direção de Arte","Moodboard e referência visual"],["Direção de Arte","Storytelling visual"],
+  ["Direção de Arte","Direção de fotografia editorial"],["Direção de Arte","Direção de arte para campanhas publicitárias"],
+  ["Direção de Arte","Composição fotográfica: regra dos terços, linhas-guia"],["Direção de Arte","Iluminação em still life"],
+  ["Direção de Arte","Direção de arte para still de produto"],["Direção de Arte","Casting visual e styling"],
+  ["Direção de Arte","Paleta de cor em direção de arte"],["Direção de Arte","Direção de arte para moda"],
+  ["Direção de Arte","Fotografia de still life para embalagens"],["Direção de Arte","Direção de arte para redes sociais"],
+  ["Direção de Arte","Referências cinematográficas em design"],["Direção de Arte","Direção de arte para catálogos"],
+  ["Direção de Arte","Concept art e exploração visual"],["Direção de Arte","Direção de arte para campanhas sazonais"],
+  ["Direção de Arte","Retoque e pós-produção de still"],["Direção de Arte","Direção de arte para spots publicitários"],
+  ["Direção de Arte","Cenografia e produção de still"],["Direção de Arte","Direção de arte editorial de revista"],
+  ["Direção de Arte","Referência noir e vintage em still"],["Direção de Arte","Direção de arte para e-commerce"],
+  ["Direção de Arte","Styling de still de alimentos"],["Direção de Arte","Direção de arte para identidade de eventos"],
+  ["Direção de Arte","Fotografia arquitetônica aplicada a design"],["Direção de Arte","Direção de arte para livros e capas"],
+  ["Direção de Arte","Luz natural vs artificial em still"],["Direção de Arte","Direção de arte para apresentações corporativas"],
+  ["Direção de Arte","Curadoria visual de portfólio"],["Direção de Arte","Direção de arte para social media ads"],
+  ["Direção de Arte","Composição de still com múltiplos produtos"],["Direção de Arte","Referências de arte contemporânea em still"],
+  ["Direção de Arte","Direção de arte para still automotivo"],["Direção de Arte","Sombra dramática em still"],
+  ["Direção de Arte","Direção de arte para embalagens premium"],["Direção de Arte","Fotografia still minimalista"],
+  ["Direção de Arte","Direção de arte para conteúdo em vídeo"],["Direção de Arte","Grid de still para campanhas multi-produto"],
+  ["Direção de Arte","Briefing criativo em direção de arte"],["Direção de Arte","Texturas físicas em still (fundo, superfície)"],
+  ["Direção de Arte","Direção de arte para still de tecnologia"],["Direção de Arte","Still com fundo infinito"],
+  ["Direção de Arte","Direção de arte para still de moda editorial"],["Direção de Arte","Retoque de cor em still de produto"],
+  ["Direção de Arte","Still com reflexos e sombras"],["Direção de Arte","Direção de arte para still de bebidas"],
+  ["Direção de Arte","Uso de props em still de produto"],["Direção de Arte","Direção de arte para still gastronômico"],
+  ["Direção de Arte","Grid de still para catálogo técnico"],["Direção de Arte","Tendências em still e direção de arte"],
+
+  // ---- Embalagem ----
+  ["Embalagem","Estrutura de embalagem (dieline)"],["Embalagem","Hierarquia de informação em rótulo"],
+  ["Embalagem","Embalagem sustentável e materiais alternativos"],["Embalagem","Embalagem primária, secundária e terciária"],
+  ["Embalagem","Design de embalagem para prateleira (shelf impact)"],["Embalagem","Embalagem de linha de produtos (family packaging)"],
+  ["Embalagem","Embalagem premium e sensação tátil"],["Embalagem","Embalagem para e-commerce (unboxing)"],
+  ["Embalagem","Embalagem flexível vs rígida"],["Embalagem","Informações obrigatórias em rótulo"],
+  ["Embalagem","Embalagem para alimentos e validade"],["Embalagem","Embalagem de bebidas: garrafa, lata, rótulo"],
+  ["Embalagem","Embalagem cosmética"],["Embalagem","Embalagem farmacêutica e acessibilidade (braille)"],
+  ["Embalagem","Estrutura de caixa dobrável (folding carton)"],["Embalagem","Embalagem de presente e edição limitada"],
+  ["Embalagem","Testes estruturais: queda e empilhamento"],["Embalagem","Embalagem infantil e segurança"],
+  ["Embalagem","Embalagem retornável e reutilizável"],["Embalagem","Rótulo circular vs quadrado"],
+  ["Embalagem","Embalagem multi-idioma"],["Embalagem","Embalagem para exportação"],
+  ["Embalagem","Embalagem de luxo e acabamentos especiais"],["Embalagem","Embalagem minimalista"],
+  ["Embalagem","Embalagem sazonal (edição natalina, etc.)"],["Embalagem","Blister e embalagem de eletrônicos"],
+  ["Embalagem","Embalagem e código de barras/QR code"],["Embalagem","Sacola e sacos personalizados"],
+  ["Embalagem","Embalagem de vinho e bebidas alcoólicas"],["Embalagem","Embalagem de brindes corporativos"],
+  ["Embalagem","Rótulo adesivo vs impresso direto"],["Embalagem","Experiência sensorial: textura e som"],
+  ["Embalagem","Embalagem para produtos de limpeza"],["Embalagem","Embalagem de pet food"],
+  ["Embalagem","Embalagem para delivery de comida"],["Embalagem","Embalagem tech: caixas de smartphone e acessórios"],
+  ["Embalagem","Sistemas de cor para linha de produtos"],["Embalagem","Embalagem e storytelling de marca"],
+  ["Embalagem","Embalagem com realidade aumentada"],["Embalagem","Embalagem biodegradável e compostável"],
+  ["Embalagem","Testes de usabilidade de abertura"],["Embalagem","Embalagem para kits e combos"],
+  ["Embalagem","Rótulo para vinícolas artesanais"],["Embalagem","Embalagem automotiva: peças e acessórios"],
+  ["Embalagem","Embalagem de suplementos e vitaminas"],["Embalagem","Estrutura de caixa com janela (window box)"],
+  ["Embalagem","Embalagem monomaterial para reciclagem"],["Embalagem","Embalagem de chá e café"],
+  ["Embalagem","Embalagem para franquias"],["Embalagem","Tendências em design de embalagem"],
+
+  // ---- História do Design ----
+  ["História do Design","Bauhaus e funcionalismo"],["História do Design","Swiss Style / International Typographic Style"],
+  ["História do Design","Design pós-moderno: Memphis, David Carson"],["História do Design","Art Nouveau e ornamentação orgânica"],
+  ["História do Design","Art Déco e geometria decorativa"],["História do Design","Construtivismo russo"],
+  ["História do Design","De Stijl e Piet Mondrian"],["História do Design","Design vitoriano e cartazes do século XIX"],
+  ["História do Design","Modernismo e o movimento moderno"],["História do Design","Psicodelia dos anos 60/70 em cartazes"],
+  ["História do Design","Punk e design DIY"],["História do Design","Arts and Crafts (William Morris)"],
+  ["História do Design","Design corporativo dos anos 50/60 (Paul Rand)"],["História do Design","Design japonês tradicional (Mingei, Ukiyo-e)"],
+  ["História do Design","Grunge design dos anos 90"],["História do Design","Web design dos anos 2000 (skeuomorfismo)"],
+  ["História do Design","Flat design e sua ascensão"],["História do Design","Brutalismo digital contemporâneo"],
+  ["História do Design","Escola de Ulm"],["História do Design","Cartazes de propaganda de guerra"],
+  ["História do Design","Design gráfico soviético"],["História do Design","Design italiano: Memphis Group, Olivetti"],
+  ["História do Design","Tipografia experimental do século XX"],["História do Design","Fotomontagem e Dadaísmo"],
+  ["História do Design","Surrealismo aplicado ao design gráfico"],["História do Design","Design escandinavo e minimalismo funcional"],
+  ["História do Design","Movimento hippie e cartazes de rock"],["História do Design","Identidade corporativa nos anos 70/80"],
+  ["História do Design","Nascimento do design digital (anos 80/90)"],["História do Design","Cyberpunk e estética digital dos anos 90"],
+  ["História do Design","Design vaporwave"],["História do Design","Pop Art e sua influência no design gráfico"],
+  ["História do Design","Op Art e ilusões visuais"],["História do Design","New Wave do design gráfico (anos 80)"],
+  ["História do Design","Tipografia de Herbert Bayer na Bauhaus"],["História do Design","Cartazes de teatro e cinema clássico"],
+  ["História do Design","Evolução do design de embalagens por década"],["História do Design","Evolução do design de logotipos no século XX"],
+  ["História do Design","Design gráfico latino-americano"],["História do Design","Tropicalismo no design brasileiro"],
+  ["História do Design","Design gráfico brasileiro: Aloisio Magalhães, Rogério Duarte"],["História do Design","Cartazes olímpicos ao longo da história"],
+  ["História do Design","Design editorial de revistas icônicas"],["História do Design","Nascimento da tipografia digital (Emigre)"],
+  ["História do Design","Memphis e o pós-modernismo italiano"],["História do Design","Design gráfico e revolução industrial"],
+  ["História do Design","Evolução da capa de disco: vinil ao CD"],["História do Design","Design gráfico e movimentos sociais"],
+  ["História do Design","Influência da Bauhaus no design contemporâneo"],["História do Design","Tendências gráficas por década"],
+  ["História do Design","O que é design"],["História do Design","Diferença entre arte, artesanato e design"],
+  ["História do Design","Evolução dos objetos de uso cotidiano"],["História do Design","Revolução Industrial: produção em massa e padronização"],
+  ["História do Design","Mecanização e a indústria do século XIX"],["História do Design","Surgimento da profissão de designer"],
+  ["História do Design","Crítica do Arts and Crafts à produção industrial"],["História do Design","Valorização do trabalho artesanal no Arts and Crafts"],
+  ["História do Design","Design de móveis, livros e estampas no Arts and Crafts"],["História do Design","Linhas orgânicas da Art Nouveau"],
+  ["História do Design","Natureza como inspiração na Art Nouveau"],["História do Design","Cartazes da Art Nouveau"],
+  ["História do Design","Deutscher Werkbund: integração entre indústria e design"],["História do Design","Produção de qualidade no Deutscher Werkbund"],
+  ["História do Design","Design funcional no Deutscher Werkbund"],["História do Design","Walter Gropius e a fundação da Bauhaus"],
+  ["História do Design","Design moderno na Bauhaus"],["História do Design","Luxo e elegância no Art Déco"],
+  ["História do Design","Arquitetura Art Déco"],["História do Design","Cartazes Art Déco"],
+  ["História do Design","Escola de Ulm: continuação das ideias da Bauhaus"],["História do Design","Método científico no design da Escola de Ulm"],
+  ["História do Design","Design de produtos na Escola de Ulm"],["História do Design","Simplicidade no design escandinavo"],
+  ["História do Design","Materiais naturais no design escandinavo"],["História do Design","A tipografia Helvetica no design suíço"],
+  ["História do Design","Objetividade e comunicação clara no design suíço"],["História do Design","Design experimental do pós-modernismo"],
+  ["História do Design","Formas geométricas no pós-modernismo"],["História do Design","História das revistas no design gráfico"],
+  ["História do Design","História dos livros no design gráfico"],["História do Design","História da sinalização gráfica"],
+  ["História do Design","Gutenberg e os tipos móveis"],["História do Design","Evolução histórica das fontes tipográficas"],
+  ["História do Design","Primeiras escolas de design no Brasil"],["História do Design","Industrialização e design no Brasil"],
+  ["História do Design","Identidade visual brasileira"],["História do Design","Designers brasileiros importantes"],
+  ["História do Design","Computadores e o design gráfico"],["História do Design","Softwares gráficos na história do design"],
+  ["História do Design","Internet e o design digital"],["História do Design","Design para dispositivos móveis"],
+  ["História do Design","Ecodesign"],["História do Design","Economia circular no design"],
+  ["História do Design","Design sustentável"],["História do Design","Dieter Rams e os princípios do bom design"],
+  ["História do Design","Massimo Vignelli"],["História do Design","Saul Bass"],
+
+  // ---- História da Arte ----
+  ["História da Arte","Pinturas rupestres"],["História da Arte","Esculturas primitivas"],
+  ["História da Arte","Primeiras formas de comunicação visual"],["História da Arte","Arte Egípcia"],
+  ["História da Arte","Arte Grega"],["História da Arte","Arte Romana"],
+  ["História da Arte","Símbolos e escrita na Antiguidade"],["História da Arte","Arte Bizantina"],
+  ["História da Arte","Arte Românica"],["História da Arte","Arte Gótica"],
+  ["História da Arte","Manuscritos iluminados"],["História da Arte","Perspectiva no Renascimento"],
+  ["História da Arte","Proporção no Renascimento"],["História da Arte","Humanismo renascentista"],
+  ["História da Arte","Leonardo da Vinci"],["História da Arte","Michelangelo"],
+  ["História da Arte","Rafael"],["História da Arte","Dramaticidade no Barroco"],
+  ["História da Arte","Ornamentação no Rococó"],["História da Arte","Uso da luz e sombra (claro-escuro)"],
+  ["História da Arte","Neoclassicismo: inspiração na arte clássica"],["História da Arte","Romantismo: emoção e expressão"],
+  ["História da Arte","Realismo: pintura do cotidiano"],["História da Arte","Impressionismo: cor e luz"],
+  ["História da Arte","Pintura ao ar livre (plein air)"],["História da Arte","Cubismo"],
+  ["História da Arte","Futurismo"],["História da Arte","Expressionismo"],
+  ["História da Arte","Dadaísmo"],["História da Arte","Surrealismo"],
+  ["História da Arte","Fauvismo"],["História da Arte","Construtivismo Russo"],
+  ["História da Arte","De Stijl"],["História da Arte","Design funcional na Bauhaus"],
+  ["História da Arte","Tipografia da Bauhaus"],["História da Arte","Grid na Bauhaus"],
+  ["História da Arte","Minimalismo bauhausiano"],["História da Arte","Integração entre arte, arquitetura e design na Bauhaus"],
+  ["História da Arte","Grid modular no Design Suíço"],["História da Arte","Tipografia sem serifa no Design Suíço"],
+  ["História da Arte","Clareza visual no Estilo Internacional"],["História da Arte","Hierarquia da informação no Design Suíço"],
+  ["História da Arte","Cultura de massa na Pop Art"],["História da Arte","Publicidade e Pop Art"],
+  ["História da Arte","Cores vibrantes da Pop Art"],["História da Arte","Quebra das regras no pós-modernismo"],
+  ["História da Arte","Experimentação visual pós-moderna"],["História da Arte","Memphis Design"],
+  ["História da Arte","Design desconstrutivista"],["História da Arte","Escrita antiga e origens da tipografia"],
+  ["História da Arte","Gutenberg e a imprensa"],["História da Arte","Fontes com serifa na história da tipografia"],
+  ["História da Arte","Fontes sem serifa na história da tipografia"],["História da Arte","Tipografia moderna e digital"],
+  ["História da Arte","História dos cartazes"],["História da Arte","História da identidade visual"],
+  ["História da Arte","História das embalagens"],["História da Arte","Design editorial ao longo do tempo"],
+  ["História da Arte","Nascimento do design digital"],["História da Arte","Arte digital contemporânea"],
+  ["História da Arte","Design de interação"],["História da Arte","Inteligência artificial na arte"],
+  ["História da Arte","Novas mídias artísticas"],["História da Arte","Cronologia da história da arte"],
+  ["História da Arte","Características de cada movimento artístico"],["História da Arte","Principais artistas e suas obras"],
+  ["História da Arte","Influência dos movimentos artísticos no design gráfico"],["História da Arte","Relação entre arte, publicidade e comunicação visual"],
+
+  // ---- Design Editorial ----
+  ["Design Editorial","Diagramação de livros"],["Design Editorial","Diagramação de revistas"],
+  ["Design Editorial","Diagramação de jornais"],["Design Editorial","Grid editorial"],
+  ["Design Editorial","Margens e sangrias em publicações"],["Design Editorial","Paginação"],
+  ["Design Editorial","Hierarquia editorial"],["Design Editorial","Capa de livro"],
+  ["Design Editorial","Capa de revista"],["Design Editorial","Lombada de livro"],
+  ["Design Editorial","Miolo de livro"],["Design Editorial","Sumário e índice editorial"],
+  ["Design Editorial","Estilo de parágrafo em editorial"],["Design Editorial","Colunas em jornal"],
+  ["Design Editorial","Manchete e chamadas"],["Design Editorial","Legendas de imagem"],
+  ["Design Editorial","Fotojornalismo e diagramação"],["Design Editorial","Infográficos editoriais"],
+  ["Design Editorial","Editorial de moda"],["Design Editorial","Editorial de revista de arquitetura"],
+  ["Design Editorial","Diagramação de catálogos"],["Design Editorial","Diagramação de anuário"],
+  ["Design Editorial","Diagramação de livro infantil"],["Design Editorial","Diagramação de HQs e quadrinhos"],
+  ["Design Editorial","Diagramação de livro didático"],["Design Editorial","Diagramação de manual técnico"],
+  ["Design Editorial","Grid de baseline em livros"],["Design Editorial","Tipografia em contexto de livro"],
+  ["Design Editorial","Espaço em branco editorial"],["Design Editorial","Editorial digital (e-books)"],
+  ["Design Editorial","Revista digital interativa"],["Design Editorial","Diagramação para tablets"],
+  ["Design Editorial","Publicação impressa vs digital"],["Design Editorial","Newsletter e diagramação"],
+  ["Design Editorial","Jornal impresso vs online"],["Design Editorial","Cadernos e suplementos de jornal"],
+  ["Design Editorial","Diagramação de página dupla (spread)"],["Design Editorial","Diretrizes editoriais de marca"],
+  ["Design Editorial","Livro-reportagem"],["Design Editorial","Fanzines e publicações independentes"],
+  ["Design Editorial","Diagramação de dissertação e tese"],["Design Editorial","Photobook: editorial de fotografia"],
+  ["Design Editorial","Publicação corporativa (relatório anual)"],["Design Editorial","Diagramação de cardápio"],
+  ["Design Editorial","Editorial esportivo"],["Design Editorial","Revista de negócios"],
+  ["Design Editorial","Diagramação sazonal de revista"],["Design Editorial","Editorial minimalista"],
+  ["Design Editorial","Diagramação multilíngue de publicações"],["Design Editorial","Tendências em design editorial"],
+
+  // ---- Fundamentos do Design ----
+  ["Fundamentos do Design","Lei da Gestalt: proximidade"],["Fundamentos do Design","Lei da Gestalt: semelhança"],
+  ["Fundamentos do Design","Lei da Gestalt: continuidade"],["Fundamentos do Design","Lei da Gestalt: fechamento"],
+  ["Fundamentos do Design","Lei da Gestalt: figura e fundo"],["Fundamentos do Design","Lei da Gestalt: pregnância da forma"],
+  ["Fundamentos do Design","Percepção visual e ilusões de ótica"],["Fundamentos do Design","Semiótica: signo, significante e significado"],
+  ["Fundamentos do Design","Semiótica de Peirce"],["Fundamentos do Design","Semiótica de Saussure"],
+  ["Fundamentos do Design","Ícone, índice e símbolo"],["Fundamentos do Design","Princípio do design: equilíbrio"],
+  ["Fundamentos do Design","Princípio do design: contraste"],["Fundamentos do Design","Princípio do design: repetição"],
+  ["Fundamentos do Design","Princípio do design: proximidade"],["Fundamentos do Design","Princípio do design: alinhamento"],
+  ["Fundamentos do Design","Princípio do design: hierarquia"],["Fundamentos do Design","Princípio do design: unidade"],
+  ["Fundamentos do Design","Princípio do design: ritmo"],["Fundamentos do Design","Princípio do design: proporção"],
+  ["Fundamentos do Design","Princípio do design: ênfase"],["Fundamentos do Design","Teoria da forma: ponto, linha, plano"],
+  ["Fundamentos do Design","Percepção de profundidade e espaço"],["Fundamentos do Design","Psicologia da percepção aplicada ao design"],
+  ["Fundamentos do Design","Semiótica aplicada à identidade visual"],["Fundamentos do Design","Leitura de imagem"],
+  ["Fundamentos do Design","Denotação e conotação"],["Fundamentos do Design","Retórica visual"],
+  ["Fundamentos do Design","Metáfora visual"],["Fundamentos do Design","Signos culturais no design"],
+  ["Fundamentos do Design","Percepção de movimento (motion perception)"],["Fundamentos do Design","Teoria da comunicação aplicada ao design"],
+  ["Fundamentos do Design","Codificação e decodificação de mensagens visuais"],["Fundamentos do Design","Design centrado na percepção do usuário"],
+  ["Fundamentos do Design","Fundamentos da linguagem visual"],["Fundamentos do Design","Elementos visuais: ponto, linha, forma, textura"],
+  ["Fundamentos do Design","Elementos visuais: cor e valor"],["Fundamentos do Design","Princípios da composição visual"],
+  ["Fundamentos do Design","Gestalt aplicada à interface"],["Fundamentos do Design","Percepção de contraste tonal"],
+  ["Fundamentos do Design","Ambiguidade visual e figura-fundo reversível"],["Fundamentos do Design","Fechamento perceptivo em logotipos"],
+  ["Fundamentos do Design","Semiótica da cor"],["Fundamentos do Design","Semiótica da tipografia"],
+  ["Fundamentos do Design","Fundamentos do design de informação"],["Fundamentos do Design","Gestalt aplicada à fotografia"],
+  ["Fundamentos do Design","Percepção visual e acessibilidade"],["Fundamentos do Design","Simplicidade e redução formal"],
+  ["Fundamentos do Design","Princípios do design aplicados à embalagem"],["Fundamentos do Design","Fundamentos do design aplicados a UX"],
+];
+
+const catsSet = [...new Set(TOPICS.map(t => t[0]))];
+let activeCats = new Set(catsSet);
+let history = [];
+let spinning = false;
+let ticketCount = 0;
+
+const chipsEl = document.getElementById('chips');
+const poolCountEl = document.getElementById('poolCount');
+
+function updatePoolCount() {
+  poolCountEl.textContent = pool().length + ' temas na seleção atual';
+}
+
+catsSet.forEach(cat => {
+  const chip = document.createElement('div');
+  chip.className = 'chip on';
+  chip.textContent = cat;
+  chip.addEventListener('click', () => {
+    if (activeCats.has(cat)) {
+      if (activeCats.size === 1) return; // keep at least one active
+      activeCats.delete(cat);
+      chip.classList.remove('on');
+    } else {
+      activeCats.add(cat);
+      chip.classList.add('on');
+    }
+    drawQueue = []; // reset the no-repeat deck whenever the selection changes
+    updatePoolCount();
+  });
+  chipsEl.appendChild(chip);
+});
+
+const spinBtn = document.getElementById('spinBtn');
+const ticket = document.getElementById('ticket');
+const catLabel = document.getElementById('catLabel');
+const topicLabel = document.getElementById('topicLabel');
+const ticketId = document.getElementById('ticketId');
+const histList = document.getElementById('histList');
+
+function pool() {
+  return TOPICS.filter(t => activeCats.has(t[0]));
+}
+
+function pad(n){ return n.toString().padStart(2,'0'); }
+
+// ---- baralho sem repetição (shuffle-bag) ----
+// Garante que nenhum tema se repete até que todos os temas da seleção
+// atual já tenham caído uma vez; aí o baralho é reembaralhado.
+let drawQueue = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function drawNext(items) {
+  if (!drawQueue.length) {
+    drawQueue = shuffle(items);
+  }
+  return drawQueue.pop();
+}
+
+updatePoolCount();
+
+spinBtn.addEventListener('click', () => {
+  if (spinning) return;
+  const items = pool();
+  if (!items.length) return;
+  spinning = true;
+  spinBtn.disabled = true;
+  ticket.classList.remove('landed');
+  topicLabel.classList.remove('placeholder');
+
+  let ticks = 0;
+  const totalTicks = 18;
+  let delay = 40;
+
+  function tick(){
+    // flicker: puramente visual, pode repetir durante a animação
+    const pick = items[Math.floor(Math.random() * items.length)];
+    catLabel.textContent = pick[0].toUpperCase();
+    topicLabel.textContent = pick[1];
+    ticks++;
+    if (ticks < totalTicks) {
+      delay += 12;
+      setTimeout(tick, delay);
+    } else {
+      // pick final: vem do baralho sem repetição
+      const final = drawNext(items);
+      catLabel.textContent = final[0].toUpperCase();
+      topicLabel.textContent = final[1];
+      ticket.classList.add('landed');
+      ticketCount++;
+      ticketId.textContent = 'Nº ' + pad(ticketCount);
+      addHistory(final);
+      spinning = false;
+      spinBtn.disabled = false;
+      resetTimer();
+    }
+  }
+  tick();
+});
+
+function addHistory(item) {
+  const now = new Date();
+  const time = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  history.unshift({ cat: item[0], topic: item[1], time });
+  renderHistory();
+}
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  history = [];
+  renderHistory();
+});
+
+function renderHistory() {
+  if (!history.length) {
+    histList.innerHTML = '<div class="hist-empty">Nenhum tema sorteado ainda.</div>';
+    return;
+  }
+  histList.innerHTML = history.map((h, i) => `
+    <div class="hist-item">
+      <span class="hist-num">${pad(history.length - i)}</span>
+      <span><span class="hist-cat">${h.cat}</span>${h.topic}</span>
+      <span class="hist-time">${h.time}</span>
+    </div>
+  `).join('');
+}
+
+/* timer */
+const DURATION = 60;
+let remaining = DURATION;
+let timerInterval = null;
+const ringFg = document.getElementById('ringFg');
+const ringTime = document.getElementById('ringTime');
+const timerBlock = document.getElementById('timerBlock');
+const CIRC = 207.3;
+
+function renderTimer(){
+  const m = Math.floor(remaining/60);
+  const s = remaining%60;
+  ringTime.textContent = m + ':' + pad(s);
+  const frac = remaining / DURATION;
+  ringFg.style.strokeDashoffset = CIRC * (1 - frac);
+}
+renderTimer();
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (timerInterval) return;
+  timerBlock.classList.remove('done');
+  timerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      remaining = 0;
+      renderTimer();
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerBlock.classList.add('done');
+      return;
+    }
+    renderTimer();
+  }, 1000);
+});
+
+document.getElementById('pauseBtn').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  timerInterval = null;
+});
+
+document.getElementById('resetBtn').addEventListener('click', resetTimer);
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  remaining = DURATION;
+  timerBlock.classList.remove('done');
+  renderTimer();
+}
+</script>
+</body>
+</html>
