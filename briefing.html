@@ -310,6 +310,13 @@ const SEGMENTS = [
   "marca de óculos","marca de biquínis","loja de móveis","escola infantil",
   "buffet para aniversários","loja de roupas","marca de maquiagem",
   "marca de skincare","restaurante",
+  "wine bar","doceria","loja de açaí",
+  "loja de sapatos","loja de bijuterias","marca de perfumes","loja de lingerie","ateliê de moda autoral",
+  "loja de decoração","loja de tapetes","loja de iluminação","loja de utilidades domésticas","estúdio de arquitetura",
+  "estúdio de meditação","spa urbano","estúdio de crossfit","clínica de estética","estúdio de dança fitness","massoterapia","estúdio de artes marciais",
+  "loja de brinquedos","loja de roupas infantis","banho e tosa","clínica veterinária","loja de produtos pet premium","escolinha de esportes infantil","hotel para pets",
+  "museu de arte","cinema de bairro","galeria de arte",
+  "ateliê de crochê","ateliê de bordado","marcenaria","estúdio de fotografia","gráfica artesanal",
 ];
 
 const SEGMENT_CATEGORY = {
@@ -333,6 +340,22 @@ const SEGMENT_CATEGORY = {
   "escola infantil":"infantil_pet","buffet para aniversários":"infantil_pet",
   "loja de roupas":"moda_beleza","marca de maquiagem":"moda_beleza",
   "marca de skincare":"moda_beleza","restaurante":"comida",
+  "wine bar":"comida","doceria":"comida","loja de açaí":"comida",
+  "loja de sapatos":"moda_beleza","loja de bijuterias":"moda_beleza",
+  "marca de perfumes":"moda_beleza","loja de lingerie":"moda_beleza",
+  "ateliê de moda autoral":"moda_beleza",
+  "loja de decoração":"casa","loja de tapetes":"casa","loja de iluminação":"casa",
+  "loja de utilidades domésticas":"casa","estúdio de arquitetura":"casa",
+  "estúdio de meditação":"bemestar","spa urbano":"bemestar","estúdio de crossfit":"bemestar",
+  "clínica de estética":"bemestar","estúdio de dança fitness":"bemestar",
+  "massoterapia":"bemestar","estúdio de artes marciais":"bemestar",
+  "loja de brinquedos":"infantil_pet","loja de roupas infantis":"infantil_pet",
+  "banho e tosa":"infantil_pet","clínica veterinária":"infantil_pet",
+  "loja de produtos pet premium":"infantil_pet","escolinha de esportes infantil":"infantil_pet",
+  "hotel para pets":"infantil_pet",
+  "museu de arte":"cultura","cinema de bairro":"cultura","galeria de arte":"cultura",
+  "ateliê de crochê":"servicos","ateliê de bordado":"servicos","marcenaria":"servicos",
+  "estúdio de fotografia":"servicos","gráfica artesanal":"servicos",
 };
 
 const CATEGORY_WORDS = {
@@ -378,6 +401,21 @@ const SEGMENT_PRODUCT = {
   "escola infantil":false,"buffet para aniversários":false,
   "loja de roupas":true,"marca de maquiagem":true,
   "marca de skincare":true,"restaurante":false,
+  "wine bar":false,"doceria":true,"loja de açaí":true,
+  "loja de sapatos":true,"loja de bijuterias":true,"marca de perfumes":true,
+  "loja de lingerie":true,"ateliê de moda autoral":true,
+  "loja de decoração":true,"loja de tapetes":true,"loja de iluminação":true,
+  "loja de utilidades domésticas":true,"estúdio de arquitetura":false,
+  "estúdio de meditação":false,"spa urbano":false,"estúdio de crossfit":false,
+  "clínica de estética":false,"estúdio de dança fitness":false,
+  "massoterapia":false,"estúdio de artes marciais":false,
+  "loja de brinquedos":true,"loja de roupas infantis":true,
+  "banho e tosa":false,"clínica veterinária":false,
+  "loja de produtos pet premium":true,"escolinha de esportes infantil":false,
+  "hotel para pets":false,
+  "museu de arte":false,"cinema de bairro":false,"galeria de arte":false,
+  "ateliê de crochê":true,"ateliê de bordado":true,"marcenaria":true,
+  "estúdio de fotografia":false,"gráfica artesanal":true,
 };
 
 const BASE_DELIVERABLE = "Identidade visual (logo + manual)";
@@ -407,17 +445,82 @@ function generateScope(segment){
 
 const PRAZOS = [5,7,10,14,18,21,25];
 
-const PALETTES = [
-  { label:"Terracota & Oliva", colors:["#C1652F","#6B7A4F","#E8DCC5","#2B2B28"] },
-  { label:"Ácido & Tinta", colors:["#D4F547","#14142B","#F2F0E6","#7A6FF0"] },
-  { label:"Coral & Marinho", colors:["#FF6F59","#1B3A4B","#F4E9DA","#2E86AB"] },
-  { label:"Mostarda & Tijolo", colors:["#E3B23C","#A63A26","#F6EFE3","#3B2E2A"] },
-  { label:"Menta & Ameixa", colors:["#9FD8B0","#4A2545","#F5F1E6","#D66BA0"] },
-  { label:"Preto & Neon", colors:["#0D0D0D","#FF2E63","#EAEAEA","#08D9D6"] },
-  { label:"Pastel Nublado", colors:["#F7C6C7","#C9D6E3","#F2EFE9","#7A8B99"] },
-  { label:"Dourado Clássico", colors:["#1A1A1A","#C9A227","#F4EDE0","#5C5C5C"] },
-  { label:"Verde Musgo & Creme", colors:["#3F4E33","#E8C230","#F2EDDE","#8A9B6E"] },
-];
+const STYLE_PALETTES = {
+  "Minimalista": [
+    { label:"Off-White & Grafite", colors:["#F5F3EE","#2B2B28","#B7B2A6","#8C8676"] },
+    { label:"Areia & Preto", colors:["#E8E1D3","#1A1A1A","#C9C2AE","#6E6A5E"] },
+    { label:"Cinza & Terracota Suave", colors:["#EDEBE6","#3A3A3A","#C97B5A","#A8A399"] },
+    { label:"Bege & Azul Petróleo", colors:["#F0EAE0","#1F3A3D","#D8CFC0","#7A8B8C"] },
+    { label:"Branco & Verde Sálvia", colors:["#FAFAF7","#3F4A3C","#9CA98F","#2B2B28"] },
+  ],
+  "Maximalista": [
+    { label:"Rosa Neon & Laranja", colors:["#FF2E9E","#FF6B00","#FFF200","#1A1A1A"] },
+    { label:"Verde Neon & Roxo", colors:["#39FF14","#7A1FA2","#FFEA00","#0D0D0D"] },
+    { label:"Amarelo Neon & Magenta", colors:["#F5FF00","#FF00A0","#00E5FF","#1A1A1A"] },
+    { label:"Coral & Turquesa Vibrante", colors:["#FF5E5B","#00CFC1","#FFC93C","#2B2B28"] },
+    { label:"Laranja & Azul Elétrico", colors:["#FF7A00","#0057FF","#FFE100","#1A1A1A"] },
+  ],
+  "Brutalista": [
+    { label:"Concreto & Vermelho", colors:["#B8B4A9","#1A1A1A","#E8281B","#E8E4D9"] },
+    { label:"Preto & Amarelo Segurança", colors:["#0D0D0D","#F2C230","#E8E4D9","#6E6A5E"] },
+    { label:"Cinza Cimento & Laranja", colors:["#9C9890","#1A1A1A","#FF5A1F","#E8E4D9"] },
+    { label:"Branco Cru & Azul Institucional", colors:["#EDEAE0","#1A1A1A","#1E4FA0","#8C8676"] },
+  ],
+  "Escandinavo": [
+    { label:"Bege & Azul Névoa", colors:["#F2EDE4","#A9BCC9","#4A5A52","#E8E1D0"] },
+    { label:"Branco & Verde Musgo", colors:["#FAF8F3","#6B7A5E","#C9C2AE","#3A4536"] },
+    { label:"Areia & Terracota Clara", colors:["#F0EAE0","#D9A184","#8C9A8C","#2B2B28"] },
+    { label:"Cinza Claro & Azul Petróleo", colors:["#E8E6E0","#2F4858","#C9C2AE","#8FA6A0"] },
+  ],
+  "Bauhaus": [
+    { label:"Vermelho, Azul e Amarelo", colors:["#E8281B","#1E4FA0","#F2C230","#1A1A1A"] },
+    { label:"Amarelo & Preto Geométrico", colors:["#F2C230","#1A1A1A","#E8E4D9","#1E4FA0"] },
+    { label:"Azul, Vermelho & Branco", colors:["#1E4FA0","#E8281B","#FAFAF7","#1A1A1A"] },
+    { label:"Primárias Suaves", colors:["#D94F3D","#3D6FD9","#E8C230","#F5F1E6"] },
+  ],
+  "Art Déco": [
+    { label:"Dourado & Preto", colors:["#1A1A1A","#C9A227","#F4EDE0","#5C1A1A"] },
+    { label:"Esmeralda & Ouro", colors:["#0B4F3A","#C9A227","#1A1A1A","#F4EDE0"] },
+    { label:"Marfim & Bronze", colors:["#F4EDE0","#8C6B2F","#1A1A1A","#6B2737"] },
+    { label:"Azul Marinho & Ouro", colors:["#0D1B3E","#C9A227","#F4EDE0","#1A1A1A"] },
+  ],
+  "Swiss Style": [
+    { label:"Vermelho, Preto & Branco", colors:["#E8281B","#1A1A1A","#FAFAF7","#8C8676"] },
+    { label:"Preto & Amarelo", colors:["#1A1A1A","#F2C230","#FAFAF7","#6E6A5E"] },
+    { label:"Azul & Branco", colors:["#1E4FA0","#FAFAF7","#1A1A1A","#C9C2AE"] },
+    { label:"Vermelho & Cinza", colors:["#D9281B","#E8E4D9","#1A1A1A","#8C8676"] },
+  ],
+  "Retrô": [
+    { label:"Laranja & Marrom 70s", colors:["#E36414","#6B3F2A","#F2C230","#EDE4D3"] },
+    { label:"Verde Avocado & Mostarda", colors:["#6B8E23","#C9A227","#EDE4D3","#3A3A3A"] },
+    { label:"Rosa Chiclete & Turquesa", colors:["#FF6F9F","#2AA9A0","#FFF3D6","#2B2B28"] },
+    { label:"Vermelho Cereja & Creme", colors:["#C1272D","#F2E8D0","#3A3A3A","#E8A33D"] },
+  ],
+  "Vintage": [
+    { label:"Sépia & Vinho", colors:["#C9B896","#6B2737","#E8DCC5","#3A2E2A"] },
+    { label:"Rosa Empoeirado & Verde Oliva", colors:["#D9A6A0","#6B7A4F","#EDE4D3","#4A3F35"] },
+    { label:"Mostarda Desbotada & Marrom", colors:["#C9A24B","#5C4433","#EDE4D3","#8C7A63"] },
+    { label:"Azul Desbotado & Terracota", colors:["#7C93A3","#C1652F","#EDE4D3","#3A3A3A"] },
+  ],
+  "Grunge": [
+    { label:"Preto Sujo & Vermelho Sangue", colors:["#1A1A1A","#6B0F1A","#8C8676","#C9C2AE"] },
+    { label:"Cinza Mancha & Amarelo Ácido", colors:["#4A4A44","#D4F547","#1A1A1A","#8C8676"] },
+    { label:"Marrom Ferrugem & Preto", colors:["#6B3A1F","#1A1A1A","#A39C88","#8C0F1A"] },
+    { label:"Verde Musgo Sujo & Preto", colors:["#3F4A2E","#1A1A1A","#6E6A5E","#A63A26"] },
+  ],
+  "Y2K": [
+    { label:"Cromado & Rosa Bebê", colors:["#C9D6DF","#FFB6D9","#F2F0E6","#7A6FF0"] },
+    { label:"Azul Cyber & Prata", colors:["#00E5FF","#C9D6DF","#1A1A2E","#FF2E9E"] },
+    { label:"Lilás & Verde Água", colors:["#C9A9FF","#A0FFE0","#1A1A2E","#FF6BD6"] },
+    { label:"Prata & Roxo Holográfico", colors:["#D6D6E0","#8A2BE2","#1A1A2E","#FF9EDB"] },
+  ],
+  "Glassmorphism": [
+    { label:"Azul Vidro & Lilás", colors:["#7FB3FF","#C9A9FF","#F5F3EE","#2B2B4A"] },
+    { label:"Menta Translúcida & Coral", colors:["#A0E8D8","#FF9E8A","#F5F3EE","#2B2B28"] },
+    { label:"Roxo Suave & Ciano", colors:["#B3A0FF","#7FE8E0","#F5F3EE","#2B2B4A"] },
+    { label:"Pêssego & Azul Céu", colors:["#FFC9A0","#A0C9FF","#F5F3EE","#2B2B28"] },
+  ],
+};
 
 const ILLUSTRATION = [
   "Sim — o cliente pede ilustração autoral na identidade.",
@@ -558,7 +661,8 @@ function finalize(items){
     usedNames.add(brandName);
   }
   const paletteDefined = Math.random() < 0.55;
-  const palette = paletteDefined ? pick(PALETTES) : null;
+  const stylePalettes = STYLE_PALETTES[style.name] || [];
+  const palette = (paletteDefined && stylePalettes.length) ? pick(stylePalettes) : null;
   const illustration = pick(ILLUSTRATION);
   const scope = generateScope(segment);
   const prazoDefined = Math.random() < 0.5;
@@ -577,9 +681,10 @@ function finalize(items){
   styleValue.classList.remove('muted');
   styleDesc.textContent = style.desc;
 
-  paletteTag.textContent = paletteDefined ? "DEFINIDO" : "LIVRE";
-  paletteTag.className = "tag " + (paletteDefined ? "defined" : "free");
-  paletteBody.innerHTML = renderPaletteHTML(paletteDefined, palette);
+  const paletteIsDefined = !!palette;
+  paletteTag.textContent = paletteIsDefined ? "DEFINIDO" : "LIVRE";
+  paletteTag.className = "tag " + (paletteIsDefined ? "defined" : "free");
+  paletteBody.innerHTML = renderPaletteHTML(paletteIsDefined, palette);
 
   illusValue.textContent = illustration;
   illusValue.classList.remove('muted');
